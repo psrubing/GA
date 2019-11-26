@@ -81,10 +81,10 @@ class Population:
             chromosome_path = self.dir_path +str(self.generation)+"/" + str(counter) + "_" + str(chromosome.chromosome_dec)+".inp"
             chromosome_input = open(chromosome_path, "w")
             for line in pattern:
-                if "{}" in line:
-                    line = line.replace("{}", str(chromosome.get_uranium_radius()))
-                if "[]" in line:
-                    line = line.replace("[]", str(chromosome.get_water_radius()))
+                if "surf s1 sph 0.0 0.0 0.0" in line:
+                    line += str(chromosome.get_uranium_radius())
+                if "surf s2 sph 0.0 0.0 0.0" in line:
+                    line += str(chromosome.get_water_radius())
                 chromosome_input.write(line)
 
             pattern.close()
