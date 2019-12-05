@@ -9,7 +9,7 @@ class Population:
         self.size = pop_size
         self.generation = 0
         self.pop_fitness = 0
-        self.dir_path = "/home/piotrs/GA/Generation_"
+        self.dir_path = "/home/piotrs/GA/Core+Boron/Generation_"
 
 
     def make_population(self):
@@ -77,31 +77,66 @@ class Population:
     def simulation(self):
         counter = 1
         for chromosome in self.chromosomes:
-            pattern = open("/home/piotrs/GA/input.inp", "r")
-            chromosome_path = self.dir_path +str(self.generation)+"/" + str(counter) + "_" + str(chromosome.chromosome_dec)+".inp"
-            chromosome_input = open(chromosome_path, "w")
-            for line in pattern:
-                if "surf s1 sph 0.0 0.0 0.0" in line:
-                    line += str(chromosome.get_uranium_radius())
-                if "surf s2 sph 0.0 0.0 0.0" in line:
-                    line += str(chromosome.get_water_radius())
-                chromosome_input.write(line)
+            pattern_nominal = open("/home/piotrs/GA/Core+Boron/input_nominal.inp", "r")
+            chromosome_nominal_path = self.dir_path +str(self.generation)+"/" + str(counter) + "_" + str(chromosome.chromosome_dec) + "_nominal" + ".inp"
+            chromosome_input_nominal = open(chromosome_nominal_path, "w")
+            for line in pattern_nominal:
+                if "surf 11 pz" in line:
+                    line += str(chromosome.get_lower_position()) + "\n"
+                if "surf 12 pz" in line:
+                    line += str(chromosome.get_lower_position() + chromosome.get_lower_thickness()) + "\n"
+                if "surf 16 pz" in line:
+                    line += str(chromosome.get_upper_position()) + "\n"
+                if "surf 17 pz" in line:
+                    line += str(chromosome.get_upper_position() + chromosome.get_upper_thickness()) + "\n"
+                chromosome_input_nominal.write(line)
 
-            pattern.close()
-            chromosome_input.close()
+            pattern_nominal.close()
+            chromosome_input_nominal.close()
 
-            bash_path = self.dir_path + str(self.generation) + "/" + str(counter) + "_" + str(chromosome.chromosome_dec) + ".sh"
-            bash_input = open(bash_path, "w")
-            bash_cmd = "#!/bin/bash\n/home/piotrs/GA/sss2 -omp 4 "
-            bash_input.write(bash_cmd + self.dir_path + str(self.generation) + "/" + str(counter) + "_" + str(chromosome.chromosome_dec) + ".inp")
-            bash_input.close()
+            bash_path_nominal = self.dir_path + str(self.generation) + "/" + str(counter) + "_" + str(chromosome.chromosome_dec) + "_nominal" + ".sh"
+            bash_nominal_input = open(bash_path_nominal, "w")
+            bash_cmd = "#!/bin/bash\n/home/piotrs/GA/Core+Boron/sss2 -omp 4 "
+            bash_nominal_input.write(bash_cmd + self.dir_path + str(self.generation) + "/" + str(counter) + "_" + str(chromosome.chromosome_dec) + "_nominal" + ".inp")
+            bash_nominal_input.close()
 
-            print("\nSymulacja dla chromosomu: {} z pokolenia {}".format(chromosome,self.generation))
-            os.system("bash "+bash_path)
+            #print("\nSymulacja dla chromosomu: {} z pokolenia {}".format(chromosome, self.generation))
+            os.system("bash " + bash_path_nominal)
 
-            chromosome_output = open(chromosome_path + "_res.m", "r")
-            for line in chromosome_output:
+            chromosome_nominal_output = open(chromosome_nominal_path + "_res.m", "r")
+            for line in chromosome_nominal_output:
                 if "ABS_KEFF" in line:
-                    chromosome.keff = float(line[47:58])
+                    chromosome.keff_nominal = float(line[47:58])
+
+            pattern_voided = open("/home/piotrs/GA/Core+Boron/input_voided.inp", "r")
+            chromosome_voided_path = self.dir_path + str(self.generation) + "/" + str(counter) + "_" + str(chromosome.chromosome_dec) + "_voided" + ".inp"
+            chromosome_input_voided = open(chromosome_voided_path, "w")
+            for line in pattern_voided:
+                if "surf 11 pz" in line:
+                    line += str(chromosome.get_lower_position()) + "\n"
+                if "surf 12 pz" in line:
+                    line += str(chromosome.get_lower_position() + chromosome.get_lower_thickness()) + "\n"
+                if "surf 16 pz" in line:
+                    line += str(chromosome.get_upper_position()) + "\n"
+                if "surf 17 pz" in line:
+                    line += str(chromosome.get_upper_position() + chromosome.get_upper_thickness()) + "\n"
+                chromosome_input_voided.write(line)
+
+            pattern_voided.close()
+            chromosome_input_voided.close()
+
+            bash_path_voided = self.dir_path + str(self.generation) + "/" + str(counter) + "_" + str(chromosome.chromosome_dec) + "_voided" + ".sh"
+            bash_voided_input = open(bash_path_voided, "w")
+            bash_cmd = "#!/bin/bash\n/home/piotrs/GA/Core+Boron/sss2 -omp 4 "
+            bash_voided_input.write(bash_cmd + self.dir_path + str(self.generation) + "/" + str(counter) + "_" + str(chromosome.chromosome_dec) + "_voided" + ".inp")
+            bash_voided_input.close()
+
+            #print("\nSymulacja dla chromosomu: {} z pokolenia {}".format(chromosome, self.generation))
+            os.system("bash " + bash_path_voided)
+
+            chromosome_voided_output = open(chromosome_voided_path + "_res.m", "r")
+            for line in chromosome_voided_output:
+                if "ABS_KEFF" in line:
+                    chromosome.keff_voided = float(line[47:58])
 
             counter += 1
