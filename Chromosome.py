@@ -15,7 +15,7 @@ class Chromosome:
             self.chromosome_dec = int("".join(str(x) for x in self.chromosome_list), 2)
             self.chromosome_bin = bin(self.chromosome_dec)[2:].zfill(self.chromosome_length)
         self.keff_nominal = 0.0
-        self.keff_voided = 0.0
+        self.keff_void = 0.0
 
     # def get_uranium_radius(self):
     #    value = int(self.chromosome_bin[0:16], base=2)
@@ -52,10 +52,12 @@ class Chromosome:
         # vol_water = 4.2 * (self.get_water_radius() - self.get_uranium_radius()) ** 3
         # return (100 * math.exp(-20.0 * abs(1 - self.keff_nominal))) / (dens_uranium * vol_uranium + dens_water * vol_water)
         # return (0.1 / (abs(self.keff - 1) ** 6)) / (dens_uranium * vol_uranium + dens_water * vol_water)
-        svr = (self.keff_voided - self.keff_nominal) / (self.keff_voided * self.keff_nominal) * 10 ** 5
-        return 1000 * self.keff_nominal ** 50 / svr
+        #svr = (self.keff_voided - self.keff_nominal) / (self.keff_voided * self.keff_nominal) * 10 ** 5
+        #return 1000 * self.keff_nominal ** 50 / svr
+        return (self.keff_nominal ** 60) / (self.keff_void ** 80)
+
 
     def __str__(self):
         return "Chromosome with {} fitness, keff_nominal: {}, keff_voided: {}, list: {}, dec: {}, bin: {}".format(
-            self.get_fitness(), self.keff_nominal, self.keff_voided, self.chromosome_list, self.chromosome_dec,
+            self.get_fitness(), self.keff_nominal, self.keff_void, self.chromosome_list, self.chromosome_dec,
             self.chromosome_bin)
