@@ -54,7 +54,7 @@ class Chromosome:
         # return (0.1 / (abs(self.keff - 1) ** 6)) / (dens_uranium * vol_uranium + dens_water * vol_water)
         #svr = (self.keff_voided - self.keff_nominal) / (self.keff_voided * self.keff_nominal) * 10 ** 5
         #return 1000 * self.keff_nominal ** 50 / svr
-        return (self.keff_nominal ** 60) / (self.keff_void ** 80)
+        return (self.keff_nominal ** 80) / (self.keff_void ** 100) - 0.05
 
 
     def __str__(self):
