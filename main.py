@@ -14,9 +14,9 @@ def main():
 
     best_path = "/home/piotrs/GA/Core+Boron/Best_Chromosomes.txt"
     best_input = open(best_path, "a+")
-    best_input.write("Generation\tPopulation Fitness\tBest Chromosome Fitness\t\tBest Chromosome\t\tkeff_nominal\t\tkeff_void\n")
+    best_input.write("Generation\tPopulation Fitness\tBest Chromosome Fitness\t\tBest Chromosome\t\tkeff_nominal\t\tkeff_void\t\tSVR\n")
     best_input.write(str(pop.generation) + "\t\t" + str(pop.pop_fitness) + "\t" + str(pop.best_chromosome(0)) + "\t\t" + str(pop.best_chromosome(1))
-                     + "\t" + str(pop.best_chromosome(2)) + "\t\t" + str(pop.best_chromosome(3)) + "\n")
+            + "\t" + str(pop.best_chromosome(2)) + "\t\t\t" + str(pop.best_chromosome(3)) + "\t\t"+ str(pop.best_chromosome(4)) + "\n")
     best_input.close()
 
     for generation in range(num_generations):
@@ -49,7 +49,7 @@ def main():
         print("Best chromosome from population nr. {} : {}\n".format(pop.generation, pop.best_chromosome()))
         print(f"Population nr. {pop.generation} fitness: ", pop.pop_fitness)
         best_input.write(str(pop.generation) + "\t\t" + str(pop.pop_fitness) + "\t" + str(pop.best_chromosome(0)) + "\t\t" + str(pop.best_chromosome(1))
-            + "\t" + str(pop.best_chromosome(2)) + "\t\t" + str(pop.best_chromosome(3)) + "\n")
+                + "\t" + str(pop.best_chromosome(2)) + "\t\t\t" + str(pop.best_chromosome(3)) + "\t\t" + str(pop.best_chromosome(4)) + "\n")
         best_input.close()
 
 
