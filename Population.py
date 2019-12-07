@@ -65,12 +65,14 @@ class Population:
         best_dec = 0
         best_keff_nominal = 0.0
         best_keff_void = 0.0
+        best_svr = 0.0
         for chromosome in self.chromosomes:
             if best_fitness < chromosome.get_fitness():
                 best_fitness = chromosome.get_fitness()
                 best_dec = chromosome.chromosome_dec
                 best_keff_nominal = chromosome.keff_nominal
                 best_keff_void = chromosome.keff_void
+                best_svr = (best_keff_void - best_keff_nominal) / (best_keff_void* best_keff_nominal) * 10 ** 5
 
         if fit_or_chrom == 0:
             return best_fitness
@@ -80,6 +82,8 @@ class Population:
             return best_keff_nominal
         elif fit_or_chrom == 3:
             return best_keff_void
+        elif fit_or_chrom == 4:
+            return best_svr
 
     def makedir(self):
         os.mkdir(self.dir_path + str(self.generation))
