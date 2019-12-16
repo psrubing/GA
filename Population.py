@@ -1,5 +1,8 @@
 import random
 import os
+import subprocess
+import multiprocessing
+
 from Chromosome import Chromosome
 
 
@@ -26,7 +29,7 @@ class Population:
     def roulette(self):
 
         pick = random.uniform(0, self.pop_fitness)
-        sum_level = 0
+        sum_level = 0.0
 
         for chromosome in self.chromosomes:
             sum_level += chromosome.get_fitness()
@@ -72,7 +75,7 @@ class Population:
                 best_dec = chromosome.chromosome_dec
                 best_keff_nominal = chromosome.keff_nominal
                 best_keff_void = chromosome.keff_void
-                best_svr = (best_keff_void - best_keff_nominal) / (best_keff_void* best_keff_nominal) * 10 ** 5
+                best_svr = (best_keff_void - best_keff_nominal) / (best_keff_void * best_keff_nominal) * 10 ** 5
 
         if fit_or_chrom == 0:
             return best_fitness
@@ -88,13 +91,13 @@ class Population:
     def makedir(self):
         os.mkdir(self.dir_path + str(self.generation))
 
-    def simulation(self):
+    def write_input(self, path_nominal, path_voided):
         counter = 1
         for chromosome in self.chromosomes:
-            pattern_nominal = open("/home/piotrs/GA/Core+Boron/input_nominal.inp", "r")
+            pattern_nominal = open(path_nominal, "r")
             chromosome_nominal_path = self.dir_path + str(self.generation) + "/" + str(counter) + "_" + str(
-                chromosome.chromosome_dec) + "_nominal" + ".inp"
-            chromosome_input_nominal = open(chromosome_nominal_path, "w")
+                chromosome.chromosome_dec) + "_nominal"
+            chromosome_input_nominal = open(chromosome_nominal_path + ".inp", "w")
             for line in pattern_nominal:
                 if "surf 11 pz" in line:
                     line += str(chromosome.get_lower_position()) + "\n"
@@ -104,31 +107,20 @@ class Population:
                     line += str(chromosome.get_upper_position()) + "\n"
                 if "surf 17 pz" in line:
                     line += str(chromosome.get_upper_position() + chromosome.get_upper_thickness()) + "\n"
+                if "5010.03c" in line:
+                    line += str(-(chromosome.get_enrichment())) + "\n"
+                if "5011.03c" in line:
+                    line += str(-(0.78261 - chromosome.get_enrichment())) + "\n"
                 chromosome_input_nominal.write(line)
 
             pattern_nominal.close()
             chromosome_input_nominal.close()
+            chromosome.nominal_path = chromosome_nominal_path + ".inp"
 
-            bash_path_nominal = self.dir_path + str(self.generation) + "/" + str(counter) + "_" + str(
-                chromosome.chromosome_dec) + "_nominal" + ".sh"
-            bash_nominal_input = open(bash_path_nominal, "w")
-            bash_cmd = "#!/bin/bash\n/home/piotrs/GA/Core+Boron/sss2 -omp 4 "
-            bash_nominal_input.write(bash_cmd + self.dir_path + str(self.generation) + "/" + str(counter) + "_" + str(
-                chromosome.chromosome_dec) + "_nominal" + ".inp")
-            bash_nominal_input.close()
-
-            # print("\nSymulacja dla chromosomu: {} z pokolenia {}".format(chromosome, self.generation))
-            os.system("bash " + bash_path_nominal)
-
-            chromosome_nominal_output = open(chromosome_nominal_path + "_res.m", "r")
-            for line in chromosome_nominal_output:
-                if "ABS_KEFF" in line:
-                    chromosome.keff_nominal = float(line[47:58])
-
-            pattern_voided = open("/home/piotrs/GA/Core+Boron/input_void.inp", "r")
+            pattern_voided = open(path_voided, "r")
             chromosome_voided_path = self.dir_path + str(self.generation) + "/" + str(counter) + "_" + str(
-                chromosome.chromosome_dec) + "_void" + ".inp"
-            chromosome_input_voided = open(chromosome_voided_path, "w")
+                chromosome.chromosome_dec) + "_void"
+            chromosome_input_voided = open(chromosome_voided_path + ".inp", "w")
             for line in pattern_voided:
                 if "surf 11 pz" in line:
                     line += str(chromosome.get_lower_position()) + "\n"
@@ -138,25 +130,46 @@ class Population:
                     line += str(chromosome.get_upper_position()) + "\n"
                 if "surf 17 pz" in line:
                     line += str(chromosome.get_upper_position() + chromosome.get_upper_thickness()) + "\n"
+                if "5010.03c" in line:
+                    line += str(-(chromosome.get_enrichment())) + "\n"
+                if "5011.03c" in line:
+                    line += str(-(0.78261 - chromosome.get_enrichment())) + "\n"
                 chromosome_input_voided.write(line)
 
             pattern_voided.close()
             chromosome_input_voided.close()
+            chromosome.void_path = chromosome_voided_path + ".inp"
+            counter += 1
 
-            bash_path_voided = self.dir_path + str(self.generation) + "/" + str(counter) + "_" + str(
-                chromosome.chromosome_dec) + "_void" + ".sh"
-            bash_voided_input = open(bash_path_voided, "w")
-            bash_cmd = "#!/bin/bash\n/home/piotrs/GA/Core+Boron/sss2 -omp 4 "
-            bash_voided_input.write(bash_cmd + self.dir_path + str(self.generation) + "/" + str(counter) + "_" + str(
-                chromosome.chromosome_dec) + "_void" + ".inp")
-            bash_voided_input.close()
+    def simulation_nominal(self):
 
-            # print("\nSymulacja dla chromosomu: {} z pokolenia {}".format(chromosome, self.generation))
-            os.system("bash " + bash_path_voided)
+        for chromosome in self.chromosomes:
+            print("\nSymulacja dla chromosomu nominal: {}".format(chromosome.chromosome_dec))
+            try:
+                subprocess.run(["/home/piotrs/GA/Core+Boron/sss2", "-omp", str(multiprocessing.cpu_count()),
+                                chromosome.nominal_path])
+            except subprocess.CalledProcessError:
+                print("Error")
 
-            chromosome_voided_output = open(chromosome_voided_path + "_res.m", "r")
-            for line in chromosome_voided_output:
+    def simulation_void(self):
+
+        for chromosome in self.chromosomes:
+            print("\nSymulacja dla chromosomu void: {}".format(chromosome.chromosome_dec))
+            try:
+                subprocess.run(["/home/piotrs/GA/Core+Boron/sss2", "-omp", str(multiprocessing.cpu_count()), chromosome.void_path])
+            except subprocess.CalledProcessError:
+                print("Error")
+
+    def get_k_nominal(self):
+        for chromosome in self.chromosomes:
+            chromosome_nominal_output = open(chromosome.nominal_path + "_res.m", "r")
+            for line in chromosome_nominal_output:
+                if "ABS_KEFF" in line:
+                    chromosome.keff_nominal = float(line[47:58])
+
+    def get_k_void(self):
+        for chromosome in self.chromosomes:
+            chromosome_void_output = open(chromosome.void_path + "_res.m", "r")
+            for line in chromosome_void_output:
                 if "ABS_KEFF" in line:
                     chromosome.keff_void = float(line[47:58])
-
-            counter += 1
