@@ -91,54 +91,65 @@ class Population:
     def makedir(self):
         os.mkdir(self.dir_path + str(self.generation))
 
-    def write_input(self, path_nominal, path_voided):
+    def write_input(self, patterns):
         counter = 1
+        endings = ["_nominal", "_void"]
         for chromosome in self.chromosomes:
-            pattern_nominal = open(path_nominal, "r")
-            chromosome_nominal_path = self.dir_path + str(self.generation) + "/" + str(counter) + "_" + str(
-                chromosome.chromosome_dec) + "_nominal"
-            chromosome_input_nominal = open(chromosome_nominal_path + ".inp", "w")
-            for line in pattern_nominal:
-                if "surf 11 pz" in line:
-                    line += str(chromosome.get_lower_position()) + "\n"
-                if "surf 12 pz" in line:
-                    line += str(chromosome.get_lower_position() + chromosome.get_lower_thickness()) + "\n"
-                if "surf 16 pz" in line:
-                    line += str(chromosome.get_upper_position()) + "\n"
-                if "surf 17 pz" in line:
-                    line += str(chromosome.get_upper_position() + chromosome.get_upper_thickness()) + "\n"
-                if "5010.03c" in line:
-                    line += str(-(chromosome.get_enrichment())) + "\n"
-                if "5011.03c" in line:
-                    line += str(-(0.78261 - chromosome.get_enrichment())) + "\n"
-                chromosome_input_nominal.write(line)
+            for i, j in enumerate(patterns):
+                pattern = open(j, "r")
+                chromosome_path = self.dir_path + str(self.generation) + "/" + str(counter) + "_" + str(
+                    chromosome.chromosome_dec) + endings[i]
+                chromosome_input = open(chromosome_path + ".inp", "w")
+                for line in pattern:
+                    if "radial_reflector   p" in line:
+                        line = "radial_reflector " + str(chromosome.get_radial_shield_start()) + "\n"
+                    if "boron_shield       p" in line:
+                        line = "boron_shield " + str(chromosome.get_radial_shield_end()) + "\n"
+                    if "surf 11 pz" in line:
+                        line += str(chromosome.get_s11()) + "\n"
+                    if "surf 12 pz" in line:
+                        line += str(chromosome.get_s12()) + "\n"
+                    if "surf 13 pz" in line:
+                        line += str(chromosome.get_s13()) + "\n"
+                    if "surf 14 pz" in line:
+                        line += str(chromosome.get_s14()) + "\n"
+                    if "surf 15 pz" in line:
+                        line += str(chromosome.get_s15()) + "\n"
+                    if "surf 16 pz" in line:
+                        line += str(chromosome.get_s16()) + "\n"
+                    if "surf 19 pz" in line:
+                        line += str(chromosome.get_s19()) + "\n"
+                    if "surf 20 pz" in line:
+                        line += str(chromosome.get_s20()) + "\n"
+                    if "surf 21 pz" in line:
+                        line += str(chromosome.get_s21()) + "\n"
+                    if "surf 22 pz" in line:
+                        line += str(chromosome.get_s22()) + "\n"
+                    if "surf 23 pz" in line:
+                        line += str(chromosome.get_s23()) + "\n"
+                    if "surf 24 pz" in line:
+                        line += str(chromosome.get_s24()) + "\n"
+                    if "cell 3  0 fill " in line:
+                        line = "cell 3  0 fill " + str(chromosome.get_first_pin_lower()) + "  11 -12   -27" + "\n"
+                    if "cell 5  0 fill " in line:
+                        line = "cell 5  0 fill " + str(chromosome.get_second_pin_lower()) + "  13 -14   -27" + "\n"
+                    if "cell 7  0 fill " in line:
+                        line = "cell 7  0 fill " + str(chromosome.get_third_pin_lower()) + "  15 -16   -27" + "\n"
+                    if "cell 11  0 fill " in line:
+                        line = "cell 11  0 fill " + str(chromosome.get_first_pin_upper()) + "  19 -20   -27" + "\n"
+                    if "cell 13  0 fill " in line:
+                        line = "cell 13  0 fill " + str(chromosome.get_second_pin_upper()) + "  21 -22   -27" + "\n"
+                    if "cell 15  0 fill " in line:
+                        line = "cell 15  0 fill " + str(chromosome.get_third_pin_upper()) + "  23 -24   -27" + "\n"
 
-            pattern_nominal.close()
-            chromosome_input_nominal.close()
-            chromosome.nominal_path = chromosome_nominal_path + ".inp"
+                    chromosome_input.write(line)
 
-            pattern_voided = open(path_voided, "r")
-            chromosome_voided_path = self.dir_path + str(self.generation) + "/" + str(counter) + "_" + str(
-                chromosome.chromosome_dec) + "_void"
-            chromosome_input_voided = open(chromosome_voided_path + ".inp", "w")
-            for line in pattern_voided:
-                if "surf 11 pz" in line:
-                    line += str(chromosome.get_lower_position()) + "\n"
-                if "surf 12 pz" in line:
-                    line += str(chromosome.get_lower_position() + chromosome.get_lower_thickness()) + "\n"
-                if "surf 16 pz" in line:
-                    line += str(chromosome.get_upper_position()) + "\n"
-                if "surf 17 pz" in line:
-                    line += str(chromosome.get_upper_position() + chromosome.get_upper_thickness()) + "\n"
-                if "5010.03c" in line:
-                    line += str(-(chromosome.get_enrichment())) + "\n"
-                if "5011.03c" in line:
-                    line += str(-(0.78261 - chromosome.get_enrichment())) + "\n"
-                chromosome_input_voided.write(line)
-
-            pattern_voided.close()
-            chromosome_input_voided.close()
-            chromosome.void_path = chromosome_voided_path + ".inp"
+                pattern.close()
+                chromosome_input.close()
+                if i == 0:
+                    chromosome.nominal_path = chromosome_path + ".inp"
+                elif i == 1:
+                    chromosome.void_path = chromosome_path + ".inp"
             counter += 1
 
     def simulation_nominal(self):
@@ -156,7 +167,8 @@ class Population:
         for chromosome in self.chromosomes:
             print("\nSymulacja dla chromosomu void: {}".format(chromosome.chromosome_dec))
             try:
-                subprocess.run(["/home/piotrs/GA/Core+Boron/sss2", "-omp", str(multiprocessing.cpu_count()), chromosome.void_path])
+                subprocess.run(
+                    ["/home/piotrs/GA/Core+Boron/sss2", "-omp", str(multiprocessing.cpu_count()), chromosome.void_path])
             except subprocess.CalledProcessError:
                 print("Error")
 
