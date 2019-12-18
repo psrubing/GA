@@ -5,14 +5,13 @@ def main():
     num_generations = 50
     pop_size = 10
     mutation_prob = 0.001
-    pattern_nominal = "/home/piotrs/GA/Core+Boron/input_nominal.inp"
-    pattern_voided = "/home/piotrs/GA/Core+Boron/input_void.inp"
     best_path = "/home/piotrs/GA/Core+Boron/Best_Chromosomes.txt"
+    patterns = ["/home/piotrs/GA/Core+Boron/input_nominal.inp", "/home/piotrs/GA/Core+Boron/input_void.inp"]
 
     pop = Population(pop_size)
     pop.make_population()
     pop.makedir()
-    pop.write_input(pattern_nominal, pattern_voided)
+    pop.write_input(patterns)
     pop.simulation_nominal()
     pop.simulation_void()
     pop.get_k_nominal()
@@ -47,7 +46,7 @@ def main():
         pop.generation = generation + 1
         pop.mutation(mutation_prob)
         pop.makedir()
-        pop.write_input(pattern_nominal, pattern_voided)
+        pop.write_input(patterns)
         pop.simulation_nominal()
         pop.simulation_void()
         pop.get_k_nominal()
