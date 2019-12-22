@@ -1,4 +1,5 @@
 from Population import Population
+import random
 
 
 def main():
