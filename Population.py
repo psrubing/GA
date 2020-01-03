@@ -130,6 +130,20 @@ class Population:
                         line += str(chromosome.get_w4()) + "\n"
                     if "surf w5 cylz 0.0 0.0" in line:
                         line += str(chromosome.get_w5()) + "\n"
+                    if "5010.03c e1" in line:
+                        line = "5010.03c " + str(-(chromosome.get_enrichment_1())) + "\n"
+                    if "5010.03c e2" in line:
+                        line = "5010.03c " + str(-(chromosome.get_enrichment_2())) + "\n"
+                    if "5010.03c e3" in line:
+                        line = "5010.03c " + str(-(chromosome.get_enrichment_3())) + "\n"
+                    if "5010.03c e4" in line:
+                        line = "5010.03c " + str(-(chromosome.get_enrichment_4())) + "\n"
+                    if "5010.03c e5" in line:
+                        line = "5010.03c " + str(-(chromosome.get_enrichment_5())) + "\n"
+                    if "5010.03c e6" in line:
+                        line = "5010.03c " + str(-(chromosome.get_enrichment_6())) + "\n"
+                    if "5010.03c e7" in line:
+                        line = "5010.03c " + str(-(chromosome.get_enrichment_7())) + "\n"
 
                     chromosome_input.write(line)
 
@@ -146,8 +160,7 @@ class Population:
         for chromosome in self.chromosomes:
             print("\nSymulacja dla chromosomu nominal: {}".format(chromosome.chromosome_dec))
             try:
-                subprocess.run(["/home/piotrs/GA/Core+Boron/sss2", "-omp", str(multiprocessing.cpu_count()),
-                                chromosome.nominal_path])
+                subprocess.run(["/home/piotrs/GA/Core+Boron/sss2", "-omp", str(multiprocessing.cpu_count()), chromosome.nominal_path])
             except subprocess.CalledProcessError:
                 print("Error")
 
@@ -156,8 +169,7 @@ class Population:
         for chromosome in self.chromosomes:
             print("\nSymulacja dla chromosomu void: {}".format(chromosome.chromosome_dec))
             try:
-                subprocess.run(
-                    ["/home/piotrs/GA/Core+Boron/sss2", "-omp", str(multiprocessing.cpu_count()), chromosome.void_path])
+                subprocess.run(["/home/piotrs/GA/Core+Boron/sss2", "-omp", str(multiprocessing.cpu_count()), chromosome.void_path])
             except subprocess.CalledProcessError:
                 print("Error")
 
@@ -165,12 +177,12 @@ class Population:
         for chromosome in self.chromosomes:
             chromosome_nominal_output = open(chromosome.nominal_path + "_res.m", "r")
             for line in chromosome_nominal_output:
-                if "ABS_KEFF" in line:
+                if "ANA_KEFF" in line:
                     chromosome.keff_nominal = float(line[47:58])
 
     def get_k_void(self):
         for chromosome in self.chromosomes:
             chromosome_void_output = open(chromosome.void_path + "_res.m", "r")
             for line in chromosome_void_output:
-                if "ABS_KEFF" in line:
+                if "ANA_KEFF" in line:
                     chromosome.keff_void = float(line[47:58])
