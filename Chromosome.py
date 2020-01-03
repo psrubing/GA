@@ -2,7 +2,7 @@ import random
 
 
 class Chromosome:
-    chromosome_length = 83
+    chromosome_length = 107
 
     def __init__(self, chromosome_list=None):
 
@@ -75,15 +75,44 @@ class Chromosome:
         value = int(self.chromosome_bin[77:83], base=2)
         return 5 + self.get_w4() + (value * 45) / float((2 ** 6) - 1)
 
+    def get_enrichment_1(self):
+        value = int(self.chromosome_bin[83:87], base=2)
+        return 0.5 + (value * 0.75) / float((2 ** 4) - 1)
+
+    def get_enrichment_2(self):
+        value = int(self.chromosome_bin[87:91], base=2)
+        return 0.5 + (value * 0.75) / float((2 ** 4) - 1)
+
+    def get_enrichment_3(self):
+        value = int(self.chromosome_bin[91:95], base=2)
+        return 0.5 + (value * 0.75) / float((2 ** 4) - 1)
+
+    def get_enrichment_4(self):
+        value = int(self.chromosome_bin[95:99], base=2)
+        return 0.5 + (value * 0.75) / float((2 ** 4) - 1)
+
+    def get_enrichment_5(self):
+        value = int(self.chromosome_bin[99:103], base=2)
+        return 0.5 + (value * 0.75) / float((2 ** 4) - 1)
+
+    def get_enrichment_6(self):
+        value = int(self.chromosome_bin[103:107], base=2)
+        return 0.5 + (value * 0.75) / float((2 ** 4) - 1)
+
+    def get_enrichment_7(self):
+        value = int(self.chromosome_bin[107:111], base=2)
+        return 0.5 + (value * 0.75) / float((2 ** 4) - 1)
+
+
     def get_fitness(self):
-        # svr = (self.keff_voided - self.keff_nominal) / (self.keff_voided * self.keff_nominal) * 10 ** 5
+        svr = (self.keff_void - self.keff_nominal) / (self.keff_void * self.keff_nominal) * 10 ** 5
         # f_k = 1000 * (0.03 + self.keff_nominal - self.keff_void)
         # barrier = 0.05
         # if f_k < barrier:
         # return barrier
         # else:
         # return f_k
-        return self.keff_nominal ** 60 / self.keff_void ** 80
+        return self.keff_nominal / svr
 
     def __str__(self):
         return "Chromosome with {} fitness, keff_nominal: {}, keff_voided: {}, list: {}, dec: {}, bin: {}".format(
