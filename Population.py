@@ -4,6 +4,7 @@ import subprocess
 import multiprocessing
 
 from Chromosome import Chromosome
+import config
 
 
 class Population:
@@ -13,26 +14,26 @@ class Population:
         self.size = pop_size
         self.generation = 0
         self.pop_fitness = 0
-        self.dir_path = "/home/piotrs/GA/Core+Boron/Generation_"
+        self.dir_path = config.dir_path
 
     def make_population(self):
 
         for i in range(self.size):
             self.chromosomes.append(Chromosome())
 
-    def calc_pop_fitness(self):
+    def calc_pop_fitness(self, min_val, generation):
 
         for chromosome in self.chromosomes:
-            self.pop_fitness += chromosome.get_fitness()
+            self.pop_fitness += chromosome.get_fitness(min_val, generation)
         return self.pop_fitness
 
-    def roulette(self):
+    def roulette(self, min_val, generation):
 
         pick = random.uniform(0, self.pop_fitness)
         sum_level = 0.0
 
         for chromosome in self.chromosomes:
-            sum_level += chromosome.get_fitness()
+            sum_level += chromosome.get_fitness(min_val, generation)
             if sum_level > pick:
                 return chromosome
 
@@ -63,82 +64,131 @@ class Population:
             new_chromosomes.append(Chromosome(new_chromosome))
         self.chromosomes = new_chromosomes
 
-    def best_chromosome(self, fit_or_chrom=0):
+    def best_chromosome(self, option, min_val, generation):
         best_fitness = 0.0
         best_dec = 0
         best_keff_nominal = 0.0
         best_keff_void = 0.0
         best_svr = 0.0
         for chromosome in self.chromosomes:
-            if best_fitness < chromosome.get_fitness():
-                best_fitness = chromosome.get_fitness()
+            if best_fitness < chromosome.get_fitness(min_val, generation):
+                best_fitness = chromosome.get_fitness(min_val, generation)
                 best_dec = chromosome.chromosome_dec
                 best_keff_nominal = chromosome.keff_nominal
                 best_keff_void = chromosome.keff_void
                 best_svr = (best_keff_void - best_keff_nominal) / (best_keff_void * best_keff_nominal) * 10 ** 5
 
-        if fit_or_chrom == 0:
+        if option == 0:
             return best_fitness
-        elif fit_or_chrom == 1:
+        elif option == 1:
             return best_dec
-        elif fit_or_chrom == 2:
+        elif option == 2:
             return best_keff_nominal
-        elif fit_or_chrom == 3:
+        elif option == 3:
             return best_keff_void
-        elif fit_or_chrom == 4:
+        elif option == 4:
             return best_svr
+
+    def worst_chromosome(self):
+        worst_fitness = 10000000.0
+        for chromosome in self.chromosomes:
+            if worst_fitness > chromosome.get_fitness(0, 0):
+                worst_fitness = chromosome.get_fitness(0, 0)
+        return worst_fitness
 
     def makedir(self):
         os.mkdir(self.dir_path + str(self.generation))
 
-    def write_input(self, path_nominal, path_voided):
+    def write_input(self, patterns):
         counter = 1
+        endings = ["_nominal", "_void"]
         for chromosome in self.chromosomes:
-            pattern_nominal = open(path_nominal, "r")
-            chromosome_nominal_path = self.dir_path + str(self.generation) + "/" + str(counter) + "_" + str(
-                chromosome.chromosome_dec) + "_nominal"
-            chromosome_input_nominal = open(chromosome_nominal_path + ".inp", "w")
-            for line in pattern_nominal:
-                if "surf 11 pz" in line:
-                    line += str(chromosome.get_lower_position()) + "\n"
-                if "surf 12 pz" in line:
-                    line += str(chromosome.get_lower_position() + chromosome.get_lower_thickness()) + "\n"
-                if "surf 16 pz" in line:
-                    line += str(chromosome.get_upper_position()) + "\n"
-                if "surf 17 pz" in line:
-                    line += str(chromosome.get_upper_position() + chromosome.get_upper_thickness()) + "\n"
-                if "5010.03c" in line:
-                    line += str(-(chromosome.get_enrichment())) + "\n"
-                if "5011.03c" in line:
-                    line += str(-(0.78261 - chromosome.get_enrichment())) + "\n"
-                chromosome_input_nominal.write(line)
+            for i, j in enumerate(patterns):
+                pattern = open(j, "r")
+                chromosome_path = self.dir_path + str(self.generation) + "/" + str(counter) + "_" + str(
+                    chromosome.chromosome_dec) + endings[i]
+                chromosome_input = open(chromosome_path + ".inp", "w")
+                for line in pattern:
 
-            pattern_nominal.close()
-            chromosome_input_nominal.close()
-            chromosome.nominal_path = chromosome_nominal_path + ".inp"
+                    if "surf p3 pz" in line:
+                        line += str(chromosome.get_p3()) + "\n"
+                    if "surf p4 pz" in line:
+                        line += str(chromosome.get_p4()) + "\n"
+                    if "surf p5 pz" in line:
+                        line += str(chromosome.get_p5()) + "\n"
+                    if "surf p6 pz" in line:
+                        line += str(chromosome.get_p6()) + "\n"
+                    if "surf p7 pz" in line:
+                        line += str(chromosome.get_p7()) + "\n"
+                    if "surf p8 pz" in line:
+                        line += str(chromosome.get_p8()) + "\n"
+                    if "surf p11 pz" in line:
+                        line += str(chromosome.get_p11()) + "\n"
+                    if "surf p12 pz" in line:
+                        line += str(chromosome.get_p12()) + "\n"
+                    if "surf p13 pz" in line:
+                        line += str(chromosome.get_p13()) + "\n"
+                    if "surf p14 pz" in line:
+                        line += str(chromosome.get_p14()) + "\n"
+                    if "surf p15 pz" in line:
+                        line += str(chromosome.get_p15()) + "\n"
+                    if "surf p16 pz" in line:
+                        line += str(chromosome.get_p16()) + "\n"
+                    if "surf w4 cylz 0.0 0.0" in line:
+                        line += str(chromosome.get_w4()) + "\n"
+                    if "surf w5 cylz 0.0 0.0" in line:
+                        line += str(chromosome.get_w5()) + "\n"
+                    if "5010.06c e1" in line:
+                        val = 0.03122344
+                        line = "5010.06c " + str(val * chromosome.get_enrichment_1()) + "\n"
+                    if "5011.06c e1" in line:
+                        val = 0.03122344
+                        line = "5011.06c " + str((1 - chromosome.get_enrichment_1()) * val) + "\n"
+                    if "5010.06c e2" in line:
+                        val = 0.03122344
+                        line = "5010.06c " + str(val * chromosome.get_enrichment_2()) + "\n"
+                    if "5011.06c e2" in line:
+                        val = 0.03122344
+                        line = "5011.06c " + str((1 - chromosome.get_enrichment_2()) * val) + "\n"
+                    if "5010.06c e3" in line:
+                        val = 0.03122344
+                        line = "5010.06c " + str(val * chromosome.get_enrichment_3()) + "\n"
+                    if "5011.06c e3" in line:
+                        val = 0.03122344
+                        line = "5011.06c " + str((1 - chromosome.get_enrichment_3()) * val) + "\n"
+                    if "5010.06c e4" in line:
+                        val = 0.0235362797
+                        line = "5010.06c " + str(val * chromosome.get_enrichment_4()) + "\n"
+                    if "5011.06c e4" in line:
+                        val = 0.0235362797
+                        line = "5011.06c " + str((1 - chromosome.get_enrichment_4()) * val) + "\n"
+                    if "5010.06c e5" in line:
+                        val = 0.0235362797
+                        line = "5010.06c " + str(val * chromosome.get_enrichment_5()) + "\n"
+                    if "5011.06c e5" in line:
+                        val = 0.0235362797
+                        line = "5011.06c " + str((1 - chromosome.get_enrichment_5()) * val) + "\n"
+                    if "5010.06c e6" in line:
+                        val = 0.0235362797
+                        line = "5010.06c " + str(val * chromosome.get_enrichment_6()) + "\n"
+                    if "5011.06c e6" in line:
+                        val = 0.0235362797
+                        line = "5011.06c " + str((1 - chromosome.get_enrichment_6()) * val) + "\n"
+                    if "5010.06c e7" in line:
+                        val = 0.013121174466
+                        line = "5010.06c " + str(val * chromosome.get_enrichment_7()) + "\n"
+                    if "5011.06c e7" in line:
+                        val = 0.013121174466
+                        line = "5011.06c " + str((1 - chromosome.get_enrichment_7()) * val) + "\n"
 
-            pattern_voided = open(path_voided, "r")
-            chromosome_voided_path = self.dir_path + str(self.generation) + "/" + str(counter) + "_" + str(
-                chromosome.chromosome_dec) + "_void"
-            chromosome_input_voided = open(chromosome_voided_path + ".inp", "w")
-            for line in pattern_voided:
-                if "surf 11 pz" in line:
-                    line += str(chromosome.get_lower_position()) + "\n"
-                if "surf 12 pz" in line:
-                    line += str(chromosome.get_lower_position() + chromosome.get_lower_thickness()) + "\n"
-                if "surf 16 pz" in line:
-                    line += str(chromosome.get_upper_position()) + "\n"
-                if "surf 17 pz" in line:
-                    line += str(chromosome.get_upper_position() + chromosome.get_upper_thickness()) + "\n"
-                if "5010.03c" in line:
-                    line += str(-(chromosome.get_enrichment())) + "\n"
-                if "5011.03c" in line:
-                    line += str(-(0.78261 - chromosome.get_enrichment())) + "\n"
-                chromosome_input_voided.write(line)
+                    chromosome_input.write(line)
 
-            pattern_voided.close()
-            chromosome_input_voided.close()
-            chromosome.void_path = chromosome_voided_path + ".inp"
+                pattern.close()
+                chromosome_input.close()
+                if i == 0:
+                    chromosome.nominal_path = chromosome_path + ".inp"
+                elif i == 1:
+                    chromosome.void_path = chromosome_path + ".inp"
             counter += 1
 
     def simulation_nominal(self):
@@ -146,8 +196,8 @@ class Population:
         for chromosome in self.chromosomes:
             print("\nSymulacja dla chromosomu nominal: {}".format(chromosome.chromosome_dec))
             try:
-                subprocess.run(["/home/piotrs/GA/Core+Boron/sss2", "-omp", str(multiprocessing.cpu_count()),
-                                chromosome.nominal_path])
+                subprocess.run(
+                    [config.serpent_path, "-omp", str(multiprocessing.cpu_count()), chromosome.nominal_path])
             except subprocess.CalledProcessError:
                 print("Error")
 
@@ -156,7 +206,8 @@ class Population:
         for chromosome in self.chromosomes:
             print("\nSymulacja dla chromosomu void: {}".format(chromosome.chromosome_dec))
             try:
-                subprocess.run(["/home/piotrs/GA/Core+Boron/sss2", "-omp", str(multiprocessing.cpu_count()), chromosome.void_path])
+                subprocess.run(
+                    [config.serpent_path, "-omp", str(multiprocessing.cpu_count()), chromosome.void_path])
             except subprocess.CalledProcessError:
                 print("Error")
 
@@ -173,3 +224,28 @@ class Population:
             for line in chromosome_void_output:
                 if "ABS_KEFF" in line:
                     chromosome.keff_void = float(line[47:58])
+
+    def write_output(self, mode, lowest):
+
+        if mode == 0:
+            best_input = open(config.best_path, "w+")
+            best_input.write(
+                "Generation\tPopulation Fitness\tBest Chromosome Fitness\t\tBest Chromosome\t\tkeff_nominal\t\tkeff_void\t\tSVR\n")
+            best_input.write(
+                str(self.generation) + "\t\t" + str(self.pop_fitness) + "\t" + str(
+                    self.best_chromosome(0, lowest, self.generation)) + "\t\t" + str(
+                    self.best_chromosome(1, lowest, self.generation))
+                + "\t\t" + str(self.best_chromosome(2, lowest, self.generation)) + "\t\t\t" + str(
+                    self.best_chromosome(3, lowest, self.generation)) + "\t\t" + str(
+                    self.best_chromosome(4, lowest, self.generation)) + "\n")
+            best_input.close()
+        if mode == 1:
+            best_input = open(config.best_path, "a+")
+            best_input.write(
+                str(self.generation) + "\t\t" + str(self.pop_fitness) + "\t" + str(
+                    self.best_chromosome(0, lowest, self.generation)) + "\t\t" + str(
+                    self.best_chromosome(1, lowest, self.generation))
+                + "\t\t" + str(self.best_chromosome(2, lowest, self.generation)) + "\t\t\t" + str(
+                    self.best_chromosome(3, lowest, self.generation)) + "\t\t" + str(
+                    self.best_chromosome(4, lowest, self.generation)) + "\n")
+            best_input.close()

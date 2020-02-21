@@ -1,42 +1,28 @@
 from Population import Population
+import config
 
 
 def main():
-    num_generations = 50
-    pop_size = 10
-    mutation_prob = 0.001
-    pattern_nominal = "/home/piotrs/GA/Core+Boron/input_nominal.inp"
-    pattern_voided = "/home/piotrs/GA/Core+Boron/input_void.inp"
-    best_path = "/home/piotrs/GA/Core+Boron/Best_Chromosomes.txt"
-
-    pop = Population(pop_size)
+    pop = Population(config.pop_size)
     pop.make_population()
     pop.makedir()
-    pop.write_input(pattern_nominal, pattern_voided)
+    pop.write_input(config.patterns)
     pop.simulation_nominal()
     pop.simulation_void()
     pop.get_k_nominal()
     pop.get_k_void()
-    pop.calc_pop_fitness()
 
-    best_input = open(best_path, "a+")
-    best_input.write(
-        "Generation\tPopulation Fitness\tBest Chromosome Fitness\t\tBest Chromosome\t\tkeff_nominal\t\tkeff_void\t\tSVR\n")
-    best_input.write(
-        str(pop.generation) + "\t\t" + str(pop.pop_fitness) + "\t" + str(pop.best_chromosome(0)) + "\t\t" + str(
-            pop.best_chromosome(1))
-        + "\t\t" + str(pop.best_chromosome(2)) + "\t\t\t" + str(pop.best_chromosome(3)) + "\t\t" + str(
-            pop.best_chromosome(4)) + "\n")
-    best_input.close()
+    lowest = pop.worst_chromosome()
+    pop.calc_pop_fitness(lowest, pop.generation)
+    pop.write_output(0, lowest)
 
-    for generation in range(num_generations):
+    for generation in range(config.num_generations):
 
-        new_pop = Population(pop_size)
-        best_input = open(best_path, "a+")
+        new_pop = Population(config.pop_size)
 
-        for i in range(int(pop_size / 2)):
-            parent1 = pop.roulette()
-            parent2 = pop.roulette()
+        for i in range(int(config.pop_size / 2)):
+            parent1 = pop.roulette(lowest, pop.generation)
+            parent2 = pop.roulette(lowest, pop.generation)
 
             child1, child2 = pop.crossover(parent1, parent2)
 
@@ -45,22 +31,17 @@ def main():
 
         pop = new_pop
         pop.generation = generation + 1
-        pop.mutation(mutation_prob)
+        pop.mutation(config.mutation_prob)
         pop.makedir()
-        pop.write_input(pattern_nominal, pattern_voided)
+        pop.write_input(config.patterns)
         pop.simulation_nominal()
         pop.simulation_void()
         pop.get_k_nominal()
         pop.get_k_void()
-        pop.calc_pop_fitness()
 
-        print(f"Population nr. {pop.generation} fitness: ", pop.pop_fitness)
-        best_input.write(
-            str(pop.generation) + "\t\t" + str(pop.pop_fitness) + "\t" + str(pop.best_chromosome(0)) + "\t\t" + str(
-                pop.best_chromosome(1))
-            + "\t\t" + str(pop.best_chromosome(2)) + "\t\t\t" + str(pop.best_chromosome(3)) + "\t\t" + str(
-                pop.best_chromosome(4)) + "\n")
-        best_input.close()
+        pop.calc_pop_fitness(lowest, pop.generation)
+
+        pop.write_output(1, lowest)
 
 
 if __name__ == '__main__':
